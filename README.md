@@ -19,6 +19,11 @@ Filter by type:
 node analyzer.js --type error
 ```
 
+Show help:
+```
+node analyzer.js --help
+```
+
 ## Files
 
 - `lib/logger.js` - shared logger class
