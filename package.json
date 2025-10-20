@@ -1,0 +1,17 @@
+{
+  "name": "log-system",
+  "version": "1.0.0",
+  "description": "Log generator and analyzer for Node.js",
+  "main": "generator.js",
+  "scripts": {
+    "generate": "node generator.js",
+    "analyze": "node analyzer.js"
+  },
+  "keywords": [
+    "logs",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
