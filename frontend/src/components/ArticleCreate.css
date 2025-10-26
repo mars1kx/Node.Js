@@ -1,0 +1,53 @@
+.article-create h2 {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.ql-container {
+  min-height: 300px;
+}
+
+.error {
+  padding: 10px;
+  background: #ffcccc;
+  color: red;
+  margin-bottom: 15px;
+}
+
+.buttons {
+  margin-top: 20px;
+}
+
+.buttons button {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.buttons button[type="submit"] {
+  background: #28a745;
+  color: white;
+}
+
+.buttons button[type="button"] {
+  background: #888;
+  color: white;
+}
+

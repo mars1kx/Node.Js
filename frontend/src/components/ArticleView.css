@@ -1,0 +1,22 @@
+.back-btn {
+  padding: 8px 16px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.article-view h2 {
+  margin-bottom: 10px;
+}
+
+.article-view .date {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.article-view .content {
+  line-height: 1.6;
+}
+
