@@ -9,7 +9,7 @@ Install dependencies:
 cd backend
 npm install
 
-cd ../frontend
+cd frontend
 npm install
 ```
 
@@ -27,7 +27,7 @@ cd frontend
 npm start
 ```
 
-Open http://localhost:3000
+Open in browser http://localhost:3000
 
 ## Files
 
