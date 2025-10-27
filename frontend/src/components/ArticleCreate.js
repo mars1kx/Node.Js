@@ -18,7 +18,8 @@ function ArticleCreate({ onSuccess, onCancel }) {
       return;
     }
 
-    if (!content.trim() || content === '<p><br></p>') {
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+    if (!textContent) {
       setError('Content is required');
       return;
     }

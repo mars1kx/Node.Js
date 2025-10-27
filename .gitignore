@@ -1,5 +1,3 @@
 node_modules
 build
-data/*.json
-!data/sample.json
 .DS_Store
