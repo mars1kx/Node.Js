@@ -23,6 +23,10 @@
   min-height: 300px;
 }
 
+.ql-editor {
+  white-space: pre-wrap;
+}
+
 .error {
   padding: 10px;
   background: #ffcccc;

@@ -51,7 +51,7 @@ app.post('/articles', async (req, res) => {
     return res.status(400).json({ error: 'Title is required' });
   }
 
-  if (!content || !content.trim()) {
+  if (!content) {
     return res.status(400).json({ error: 'Content is required' });
   }
 
@@ -60,7 +60,7 @@ app.post('/articles', async (req, res) => {
     const article = {
       id,
       title: title.trim(),
-      content: content.trim(),
+      content: content,
       createdAt: new Date().toISOString()
     };
 
@@ -80,7 +80,7 @@ app.put('/articles/:id', async (req, res) => {
     return res.status(400).json({ error: 'Title is required' });
   }
 
-  if (!content || !content.trim()) {
+  if (!content) {
     return res.status(400).json({ error: 'Content is required' });
   }
 
@@ -96,7 +96,7 @@ app.put('/articles/:id', async (req, res) => {
     }
 
     article.title = title.trim();
-    article.content = content.trim();
+    article.content = content;
     article.updatedAt = new Date().toISOString();
 
     await fs.writeFile(filePath, JSON.stringify(article, null, 2));

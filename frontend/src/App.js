@@ -46,9 +46,11 @@ function App() {
     <div className="App">
       <header>
         <h1 onClick={() => setView('list')}>Articles</h1>
-        <nav>
-          <button onClick={() => setView('create')}>Create New</button>
-        </nav>
+        {(view === 'list' || view === 'view') && (
+          <nav>
+            <button onClick={() => setView('create')}>Create New</button>
+          </nav>
+        )}
       </header>
 
       <main>
