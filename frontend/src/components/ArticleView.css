@@ -6,7 +6,30 @@
   cursor: pointer;
 }
 
+.actions {
+  float: right;
+  margin-bottom: 20px;
+}
+
+.edit-btn, .delete-btn {
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.edit-btn {
+  background: #007bff;
+  color: white;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
 .article-view h2 {
+  clear: both;
   margin-bottom: 10px;
 }
 

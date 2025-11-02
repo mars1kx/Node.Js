@@ -73,6 +73,56 @@ app.post('/articles', async (req, res) => {
   }
 });
 
+app.put('/articles/:id', async (req, res) => {
+  const { title, content } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  if (!content || !content.trim()) {
+    return res.status(400).json({ error: 'Content is required' });
+  }
+
+  try {
+    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
+    
+    let article;
+    try {
+      const data = await fs.readFile(filePath, 'utf8');
+      article = JSON.parse(data);
+    } catch (err) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    article.title = title.trim();
+    article.content = content.trim();
+    article.updatedAt = new Date().toISOString();
+
+    await fs.writeFile(filePath, JSON.stringify(article, null, 2));
+    res.json(article);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update article' });
+  }
+});
+
+app.delete('/articles/:id', async (req, res) => {
+  try {
+    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
+    
+    try {
+      await fs.access(filePath);
+    } catch (err) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    await fs.unlink(filePath);
+    res.json({ message: 'Article deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete article' });
+  }
+});
+
 fs.mkdir(DATA_DIR, { recursive: true }).then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

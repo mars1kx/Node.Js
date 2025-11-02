@@ -3,6 +3,7 @@ import './App.css';
 import ArticleList from './components/ArticleList';
 import ArticleView from './components/ArticleView';
 import ArticleCreate from './components/ArticleCreate';
+import ArticleEdit from './components/ArticleEdit';
 
 function App() {
   const [view, setView] = useState('list');
@@ -32,6 +33,15 @@ function App() {
     setView('list');
   };
 
+  const handleEdit = (article) => {
+    setSelectedArticle(article);
+    setView('edit');
+  };
+
+  const handleEditSuccess = () => {
+    setView('list');
+  };
+
   return (
     <div className="App">
       <header>
@@ -46,10 +56,21 @@ function App() {
           <ArticleList articles={articles} onView={handleViewArticle} />
         )}
         {view === 'view' && (
-          <ArticleView article={selectedArticle} onBack={() => setView('list')} />
+          <ArticleView 
+            article={selectedArticle} 
+            onBack={() => setView('list')}
+            onEdit={handleEdit}
+          />
         )}
         {view === 'create' && (
           <ArticleCreate onSuccess={handleCreateSuccess} onCancel={() => setView('list')} />
+        )}
+        {view === 'edit' && (
+          <ArticleEdit 
+            article={selectedArticle}
+            onSuccess={handleEditSuccess}
+            onCancel={() => setView('view')}
+          />
         )}
       </main>
     </div>
