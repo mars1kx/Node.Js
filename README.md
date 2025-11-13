@@ -52,12 +52,22 @@ Data:
 - Create new articles with WYSIWYG editor
 - Edit existing articles
 - Delete articles with confirmation
+- Upload attachments (images and PDFs)
+- Real-time notifications via WebSocket
 - Articles saved as JSON files
 
 ## API Endpoints
 
 - GET /articles - get all articles
 - GET /articles/:id - get single article
-- POST /articles - create new article
-- PUT /articles/:id - update article
+- POST /articles - create new article (with file upload)
+- PUT /articles/:id - update article (with file upload)
 - DELETE /articles/:id - delete article
+- WebSocket - real-time notifications
+
+## File Upload
+
+- Supported formats: JPG, PNG, PDF
+- Max file size: 5MB
+- Multiple files per article
+- Files stored in `uploads/` folder

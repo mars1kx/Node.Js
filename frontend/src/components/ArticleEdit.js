@@ -8,6 +8,43 @@ function ArticleEdit({ article, onSuccess, onCancel }) {
   const [content, setContent] = useState(article.content);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState(article.attachments || []);
+  const [removedFiles, setRemovedFiles] = useState([]);
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const validFiles = selectedFiles.filter(file => {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        setError('Only JPG, PNG and PDF files allowed');
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
+        return false;
+      }
+      return true;
+    });
+    setFiles([...files, ...validFiles]);
+    e.target.value = '';
+  };
+
+  const removeFile = (index) => {
+    setFiles(files.filter((_, i) => i !== index));
+  };
+
+  const getFilePreview = (file) => {
+    if (file.type.startsWith('image/')) {
+      return URL.createObjectURL(file);
+    }
+    return null;
+  };
+
+  const removeExistingFile = (filename) => {
+    setExistingAttachments(existingAttachments.filter(f => f.filename !== filename));
+    setRemovedFiles([...removedFiles, filename]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,12 +64,21 @@ function ArticleEdit({ article, onSuccess, onCancel }) {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      
+      if (removedFiles.length > 0) {
+        formData.append('removedFiles', JSON.stringify(removedFiles));
+      }
+      
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
       const response = await fetch(`http://localhost:3001/articles/${article.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title, content })
+        body: formData
       });
 
       if (!response.ok) {
@@ -70,6 +116,54 @@ function ArticleEdit({ article, onSuccess, onCancel }) {
             onChange={setContent}
             placeholder="Write your article here..."
           />
+        </div>
+
+        <div className="form-group">
+          <label>Current Attachments</label>
+          {existingAttachments.length > 0 ? (
+            <div className="file-list">
+              {existingAttachments.map((file, index) => (
+                <div key={index} className="file-item">
+                  {file.type.startsWith('image/') ? (
+                    <img src={`http://localhost:3001/uploads/${file.filename}`} alt={file.originalName} className="file-preview-img" />
+                  ) : (
+                    <div className="file-preview-pdf">📄</div>
+                  )}
+                  <span className="file-name">{file.originalName}</span>
+                  <span className="file-size">({Math.round(file.size / 1024)} KB)</span>
+                  <button type="button" onClick={() => removeExistingFile(file.filename)} className="remove-file">×</button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-files">No attachments</p>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>Add New Attachments (JPG, PNG, PDF only)</label>
+          <input
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.png,.pdf"
+            onChange={handleFileChange}
+          />
+          {files.length > 0 && (
+            <div className="file-list">
+              {files.map((file, index) => (
+                <div key={index} className="file-item">
+                  {file.type.startsWith('image/') ? (
+                    <img src={getFilePreview(file)} alt={file.name} className="file-preview-img" />
+                  ) : (
+                    <div className="file-preview-pdf">📄</div>
+                  )}
+                  <span className="file-name">{file.name}</span>
+                  <span className="file-size">({Math.round(file.size / 1024)} KB)</span>
+                  <button type="button" onClick={() => removeFile(index)} className="remove-file">×</button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && <div className="error">{error}</div>}

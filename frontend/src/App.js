@@ -9,11 +9,42 @@ function App() {
   const [view, setView] = useState('list');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [articles, setArticles] = useState([]);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     if (view === 'list') {
       loadArticles();
     }
+  }, [view]);
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:3001');
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'article_created') {
+        setNotification(`New article created: "${data.article.title}"`);
+        if (view === 'list') loadArticles();
+      } else if (data.type === 'article_updated') {
+        setNotification(`Article updated: "${data.article.title}"`);
+        if (view === 'list') loadArticles();
+      }
+      
+      setTimeout(() => setNotification(null), 5000);
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    return () => {
+      ws.close();
+    };
   }, [view]);
 
   const loadArticles = async () => {
@@ -44,6 +75,12 @@ function App() {
 
   return (
     <div className="App">
+      {notification && (
+        <div className="notification">
+          {notification}
+        </div>
+      )}
+      
       <header>
         <h1 onClick={() => setView('list')}>Articles</h1>
         {(view === 'list' || view === 'view') && (

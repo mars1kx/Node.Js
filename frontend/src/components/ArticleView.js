@@ -22,6 +22,12 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     }
   };
 
+  const getFileIcon = (type) => {
+    if (type.startsWith('image/')) return '🖼️';
+    if (type === 'application/pdf') return '📄';
+    return '📎';
+  };
+
   return (
     <div className="article-view">
       <button onClick={onBack} className="back-btn">← Back</button>
@@ -31,6 +37,28 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
       </div>
       <h2>{article.title}</h2>
       <p className="date">{new Date(article.createdAt).toLocaleDateString()}</p>
+      
+      {article.attachments && article.attachments.length > 0 && (
+        <div className="attachments">
+          <h3>Attachments</h3>
+          <div className="attachments-list">
+            {article.attachments.map((file, index) => (
+              <a 
+                key={index} 
+                href={`http://localhost:3001/uploads/${file.filename}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="attachment-item"
+              >
+                <span className="file-icon">{getFileIcon(file.type)}</span>
+                <span className="file-name">{file.originalName}</span>
+                <span className="file-size">({Math.round(file.size / 1024)} KB)</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+      
       <div className="content" dangerouslySetInnerHTML={{ __html: article.content }} />
     </div>
   );

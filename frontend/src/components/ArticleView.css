@@ -44,3 +44,49 @@
   white-space: pre-wrap;
 }
 
+.attachments {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-left: 3px solid #007bff;
+}
+
+.attachments h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: white;
+  text-decoration: none;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.attachment-item:hover {
+  background: #e9ecef;
+}
+
+.file-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.file-name {
+  flex: 1;
+}
+
+.file-size {
+  color: #666;
+  font-size: 12px;
+}
+
