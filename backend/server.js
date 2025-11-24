@@ -5,13 +5,13 @@ const path = require('path');
 const multer = require('multer');
 const WebSocket = require('ws');
 const http = require('http');
+const db = require('./models');
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const PORT = 3001;
-const DATA_DIR = path.join(__dirname, '../data');
+const PORT = process.env.PORT || 3001;
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
 
 app.use(cors());
@@ -66,35 +66,25 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 app.get('/articles', async (req, res) => {
   try {
-    const files = await fs.readdir(DATA_DIR);
-    const articles = [];
-
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        const data = await fs.readFile(path.join(DATA_DIR, file), 'utf8');
-        const article = JSON.parse(data);
-        articles.push({
-          id: article.id,
-          title: article.title,
-          createdAt: article.createdAt
-        });
-      }
-    }
-
-    articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const articles = await db.Article.findAll({
+      attributes: ['id', 'title', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    });
     res.json(articles);
   } catch (err) {
-    res.json([]);
+    res.status(500).json({ error: 'Failed to fetch articles' });
   }
 });
 
 app.get('/articles/:id', async (req, res) => {
   try {
-    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
-    const data = await fs.readFile(filePath, 'utf8');
-    res.json(JSON.parse(data));
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+    res.json(article);
   } catch (err) {
-    res.status(404).json({ error: 'Article not found' });
+    res.status(500).json({ error: 'Failed to fetch article' });
   }
 });
 
@@ -110,7 +100,6 @@ app.post('/articles', upload.array('files', 5), async (req, res) => {
   }
 
   try {
-    const id = Date.now().toString();
     const attachments = req.files ? req.files.map(file => ({
       filename: file.filename,
       originalName: file.originalname,
@@ -118,16 +107,11 @@ app.post('/articles', upload.array('files', 5), async (req, res) => {
       type: file.mimetype
     })) : [];
 
-    const article = {
-      id,
+    const article = await db.Article.create({
       title: title.trim(),
       content: content,
-      attachments: attachments,
-      createdAt: new Date().toISOString()
-    };
-
-    const filePath = path.join(DATA_DIR, `${id}.json`);
-    await fs.writeFile(filePath, JSON.stringify(article, null, 2));
+      attachments: attachments
+    });
 
     broadcast({
       type: 'article_created',
@@ -152,19 +136,13 @@ app.put('/articles/:id', upload.array('files', 5), async (req, res) => {
   }
 
   try {
-    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
-    
-    let article;
-    try {
-      const data = await fs.readFile(filePath, 'utf8');
-      article = JSON.parse(data);
-    } catch (err) {
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
     article.title = title.trim();
     article.content = content;
-    article.updatedAt = new Date().toISOString();
 
     if (removedFiles) {
       const filesToRemove = JSON.parse(removedFiles);
@@ -176,7 +154,7 @@ app.put('/articles/:id', upload.array('files', 5), async (req, res) => {
           console.error(`Failed to delete file: ${filename}`);
         }
       }
-      article.attachments = (article.attachments || []).filter(
+      article.attachments = article.attachments.filter(
         file => !filesToRemove.includes(file.filename)
       );
     }
@@ -188,10 +166,10 @@ app.put('/articles/:id', upload.array('files', 5), async (req, res) => {
         size: file.size,
         type: file.mimetype
       }));
-      article.attachments = [...(article.attachments || []), ...newAttachments];
+      article.attachments = [...article.attachments, ...newAttachments];
     }
 
-    await fs.writeFile(filePath, JSON.stringify(article, null, 2));
+    await article.save();
 
     broadcast({
       type: 'article_updated',
@@ -206,13 +184,8 @@ app.put('/articles/:id', upload.array('files', 5), async (req, res) => {
 
 app.delete('/articles/:id', async (req, res) => {
   try {
-    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
-    
-    let article;
-    try {
-      const data = await fs.readFile(filePath, 'utf8');
-      article = JSON.parse(data);
-    } catch (err) {
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
@@ -227,20 +200,24 @@ app.delete('/articles/:id', async (req, res) => {
       }
     }
 
-    await fs.unlink(filePath);
+    await article.destroy();
     res.json({ message: 'Article deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete article' });
   }
 });
 
-Promise.all([
-  fs.mkdir(DATA_DIR, { recursive: true }),
-  fs.mkdir(UPLOAD_DIR, { recursive: true })
-]).then(() => {
-  server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`WebSocket running on ws://localhost:${PORT}`);
-  });
+fs.mkdir(UPLOAD_DIR, { recursive: true }).then(async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log('Database connected');
+    
+    server.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`WebSocket running on ws://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Unable to connect to database:', err);
+  }
 });
 

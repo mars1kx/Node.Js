@@ -13,6 +13,37 @@ cd frontend
 npm install
 ```
 
+## Database Setup
+
+1. Install PostgreSQL on your system
+
+2. Create a database:
+```sql
+CREATE DATABASE articles_db;
+```
+
+3. Copy env.example to .env and update with your database credentials:
+```
+cd backend
+copy env.example .env
+```
+
+Edit `.env` file:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=articles_db
+DB_USER=postgres
+DB_PASSWORD=your_password
+PORT=3001
+```
+
+4. Run migrations to create tables:
+```
+cd backend
+npm run migrate
+```
+
 ## Run
 
 Start backend (port 3001):
@@ -33,6 +64,9 @@ Open in browser http://localhost:3000
 
 Backend:
 - `backend/server.js` - Express API server with 5 endpoints
+- `backend/models/` - Sequelize models
+- `backend/migrations/` - database migrations
+- `backend/config/` - database configuration
 - `backend/package.json` - backend dependencies
 
 Frontend:
@@ -42,8 +76,9 @@ Frontend:
 - `frontend/src/components/ArticleCreate.js` - form with WYSIWYG editor
 - `frontend/src/components/ArticleEdit.js` - edit existing article
 
-Data:
-- `data/` - articles saved as JSON files
+Database:
+- PostgreSQL database with Sequelize ORM
+- Articles stored in `articles` table
 
 ## Features
 
