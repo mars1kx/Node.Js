@@ -3,12 +3,13 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './ArticleCreate.css';
 
-function ArticleCreate({ onSuccess, onCancel }) {
+function ArticleCreate({ onSuccess, onCancel, workspaces }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState('');
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -60,6 +61,9 @@ function ArticleCreate({ onSuccess, onCancel }) {
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
+      if (workspaceId) {
+        formData.append('workspaceId', workspaceId);
+      }
       
       files.forEach(file => {
         formData.append('files', file);
@@ -96,6 +100,16 @@ function ArticleCreate({ onSuccess, onCancel }) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter article title"
           />
+        </div>
+
+        <div className="form-group">
+          <label>Workspace</label>
+          <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)}>
+            <option value="">No workspace</option>
+            {workspaces.map(ws => (
+              <option key={ws.id} value={ws.id}>{ws.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">

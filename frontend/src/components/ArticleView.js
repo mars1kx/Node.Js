@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ArticleView.css';
 
 function ArticleView({ article, onBack, onEdit, onDelete }) {
+  const [author, setAuthor] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState(article?.comments || []);
+  const [error, setError] = useState('');
+
   if (!article) return <div>Loading...</div>;
 
   const handleDelete = async () => {
@@ -26,6 +31,57 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     if (type.startsWith('image/')) return '🖼️';
     if (type === 'application/pdf') return '📄';
     return '📎';
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!author.trim()) {
+      setError('Author name is required');
+      return;
+    }
+
+    if (!commentText.trim()) {
+      setError('Comment text is required');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/articles/${article.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author, text: commentText })
+      });
+
+      if (!response.ok) {
+        setError('Failed to add comment');
+        return;
+      }
+
+      const newComment = await response.json();
+      setComments([...comments, newComment]);
+      setAuthor('');
+      setCommentText('');
+    } catch (err) {
+      setError('Error adding comment');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/comments/${commentId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setComments(comments.filter(c => c.id !== commentId));
+      } else {
+        alert('Failed to delete comment');
+      }
+    } catch (err) {
+      alert('Error deleting comment');
+    }
   };
 
   return (
@@ -60,6 +116,51 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
       )}
       
       <div className="content" dangerouslySetInnerHTML={{ __html: article.content }} />
+
+      <div className="comments-section">
+        <h3>Comments ({comments.length})</h3>
+        
+        <form onSubmit={handleCommentSubmit} className="comment-form">
+          <input
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            placeholder="Your name"
+          />
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Write a comment..."
+            rows="3"
+          />
+          {error && <div className="error">{error}</div>}
+          <button type="submit">Add Comment</button>
+        </form>
+
+        <div className="comments-list">
+          {comments.length === 0 ? (
+            <p className="no-comments">No comments yet</p>
+          ) : (
+            comments.map(comment => (
+              <div key={comment.id} className="comment">
+                <div className="comment-header">
+                  <strong>{comment.author}</strong>
+                  <span className="comment-date">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </span>
+                  <button 
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="delete-comment-btn"
+                  >
+                    ×
+                  </button>
+                </div>
+                <p>{comment.text}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -10,12 +10,18 @@ function App() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [articles, setArticles] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+
+  useEffect(() => {
+    loadWorkspaces();
+  }, []);
 
   useEffect(() => {
     if (view === 'list') {
       loadArticles();
     }
-  }, [view]);
+  }, [view, selectedWorkspace]);
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:3001');
@@ -33,6 +39,8 @@ function App() {
       } else if (data.type === 'article_updated') {
         setNotification(`Article updated: "${data.article.title}"`);
         if (view === 'list') loadArticles();
+      } else if (data.type === 'comment_added') {
+        setNotification('New comment added');
       }
       
       setTimeout(() => setNotification(null), 5000);
@@ -47,8 +55,17 @@ function App() {
     };
   }, [view]);
 
+  const loadWorkspaces = async () => {
+    const response = await fetch('http://localhost:3001/workspaces');
+    const data = await response.json();
+    setWorkspaces(data);
+  };
+
   const loadArticles = async () => {
-    const response = await fetch('http://localhost:3001/articles');
+    const url = selectedWorkspace 
+      ? `http://localhost:3001/articles?workspaceId=${selectedWorkspace}` 
+      : 'http://localhost:3001/articles';
+    const response = await fetch(url);
     const data = await response.json();
     setArticles(data);
   };
@@ -90,6 +107,21 @@ function App() {
         )}
       </header>
 
+      {view === 'list' && (
+        <div className="workspace-filter">
+          <label>Workspace: </label>
+          <select 
+            value={selectedWorkspace || ''} 
+            onChange={(e) => setSelectedWorkspace(e.target.value || null)}
+          >
+            <option value="">All</option>
+            {workspaces.map(ws => (
+              <option key={ws.id} value={ws.id}>{ws.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <main>
         {view === 'list' && (
           <ArticleList articles={articles} onView={handleViewArticle} />
@@ -102,7 +134,11 @@ function App() {
           />
         )}
         {view === 'create' && (
-          <ArticleCreate onSuccess={handleCreateSuccess} onCancel={() => setView('list')} />
+          <ArticleCreate 
+            onSuccess={handleCreateSuccess} 
+            onCancel={() => setView('list')}
+            workspaces={workspaces}
+          />
         )}
         {view === 'edit' && (
           <ArticleEdit 

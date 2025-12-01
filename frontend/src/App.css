@@ -52,6 +52,25 @@ header h1:hover {
   color: #007bff;
 }
 
+.workspace-filter {
+  background: white;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.workspace-filter label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.workspace-filter select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
 nav button {
   padding: 10px 20px;
   margin-right: 10px;

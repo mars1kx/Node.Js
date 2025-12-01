@@ -16,11 +16,30 @@ module.exports = (sequelize, DataTypes) => {
     attachments: {
       type: DataTypes.JSON,
       defaultValue: []
+    },
+    workspaceId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'workspaces',
+        key: 'id'
+      }
     }
   }, {
     tableName: 'articles',
     timestamps: true
   });
+
+  Article.associate = (models) => {
+    Article.belongsTo(models.Workspace, {
+      foreignKey: 'workspaceId',
+      as: 'workspace'
+    });
+    Article.hasMany(models.Comment, {
+      foreignKey: 'articleId',
+      as: 'comments'
+    });
+  };
 
   return Article;
 };

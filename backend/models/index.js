@@ -18,6 +18,14 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.Article = require('./article')(sequelize, Sequelize);
+db.Workspace = require('./workspace')(sequelize, Sequelize);
+db.Comment = require('./comment')(sequelize, Sequelize);
+
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
 
 module.exports = db;
 

@@ -64,10 +64,25 @@ function broadcast(message) {
 
 app.use('/uploads', express.static(UPLOAD_DIR));
 
+app.get('/workspaces', async (req, res) => {
+  try {
+    const workspaces = await db.Workspace.findAll({
+      order: [['name', 'ASC']]
+    });
+    res.json(workspaces);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch workspaces' });
+  }
+});
+
 app.get('/articles', async (req, res) => {
   try {
+    const { workspaceId } = req.query;
+    const where = workspaceId ? { workspaceId } : {};
+    
     const articles = await db.Article.findAll({
-      attributes: ['id', 'title', 'createdAt'],
+      where,
+      attributes: ['id', 'title', 'createdAt', 'workspaceId'],
       order: [['createdAt', 'DESC']]
     });
     res.json(articles);
@@ -78,7 +93,13 @@ app.get('/articles', async (req, res) => {
 
 app.get('/articles/:id', async (req, res) => {
   try {
-    const article = await db.Article.findByPk(req.params.id);
+    const article = await db.Article.findByPk(req.params.id, {
+      include: [{
+        model: db.Comment,
+        as: 'comments',
+        order: [['createdAt', 'ASC']]
+      }]
+    });
     if (!article) {
       return res.status(404).json({ error: 'Article not found' });
     }
@@ -89,7 +110,7 @@ app.get('/articles/:id', async (req, res) => {
 });
 
 app.post('/articles', upload.array('files', 5), async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, workspaceId } = req.body;
 
   if (!title || !title.trim()) {
     return res.status(400).json({ error: 'Title is required' });
@@ -110,7 +131,8 @@ app.post('/articles', upload.array('files', 5), async (req, res) => {
     const article = await db.Article.create({
       title: title.trim(),
       content: content,
-      attachments: attachments
+      attachments: attachments,
+      workspaceId: workspaceId || null
     });
 
     broadcast({
@@ -204,6 +226,67 @@ app.delete('/articles/:id', async (req, res) => {
     res.json({ message: 'Article deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete article' });
+  }
+});
+
+app.get('/articles/:id/comments', async (req, res) => {
+  try {
+    const comments = await db.Comment.findAll({
+      where: { articleId: req.params.id },
+      order: [['createdAt', 'ASC']]
+    });
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+app.post('/articles/:id/comments', async (req, res) => {
+  const { author, text } = req.body;
+
+  if (!author || !author.trim()) {
+    return res.status(400).json({ error: 'Author is required' });
+  }
+
+  if (!text || !text.trim()) {
+    return res.status(400).json({ error: 'Comment text is required' });
+  }
+
+  try {
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const comment = await db.Comment.create({
+      articleId: req.params.id,
+      author: author.trim(),
+      text: text.trim()
+    });
+
+    broadcast({
+      type: 'comment_added',
+      articleId: req.params.id,
+      comment: comment
+    });
+
+    res.status(201).json(comment);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create comment' });
+  }
+});
+
+app.delete('/comments/:id', async (req, res) => {
+  try {
+    const comment = await db.Comment.findByPk(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    await comment.destroy();
+    res.json({ message: 'Comment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete comment' });
   }
 });
 

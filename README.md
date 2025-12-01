@@ -63,8 +63,8 @@ Open in browser http://localhost:3000
 ## Files
 
 Backend:
-- `backend/server.js` - Express API server with 5 endpoints
-- `backend/models/` - Sequelize models
+- `backend/server.js` - Express API server with endpoints
+- `backend/models/` - Sequelize models (Article, Comment, Workspace)
 - `backend/migrations/` - database migrations
 - `backend/config/` - database configuration
 - `backend/package.json` - backend dependencies
@@ -72,13 +72,13 @@ Backend:
 Frontend:
 - `frontend/src/App.js` - main component with routing
 - `frontend/src/components/ArticleList.js` - displays all articles
-- `frontend/src/components/ArticleView.js` - shows single article with edit/delete
+- `frontend/src/components/ArticleView.js` - shows single article with comments
 - `frontend/src/components/ArticleCreate.js` - form with WYSIWYG editor
 - `frontend/src/components/ArticleEdit.js` - edit existing article
 
 Database:
 - PostgreSQL database with Sequelize ORM
-- Articles stored in `articles` table
+- Articles, Comments, and Workspaces stored in database tables
 
 ## Features
 
@@ -89,16 +89,28 @@ Database:
 - Delete articles with confirmation
 - Upload attachments (images and PDFs)
 - Real-time notifications via WebSocket
-- Articles saved as JSON files
+- Workspaces - organize articles into workspaces
+- Comments - add and view comments on articles
 
 ## API Endpoints
 
-- GET /articles - get all articles
-- GET /articles/:id - get single article
-- POST /articles - create new article (with file upload)
+Articles:
+- GET /articles - get all articles (with optional ?workspaceId filter)
+- GET /articles/:id - get single article with comments
+- POST /articles - create new article (with file upload and workspace)
 - PUT /articles/:id - update article (with file upload)
 - DELETE /articles/:id - delete article
-- WebSocket - real-time notifications
+
+Workspaces:
+- GET /workspaces - get all workspaces
+
+Comments:
+- GET /articles/:id/comments - get comments for article
+- POST /articles/:id/comments - add comment to article
+- DELETE /comments/:id - delete comment
+
+WebSocket:
+- Real-time notifications for article/comment changes
 
 ## File Upload
 
