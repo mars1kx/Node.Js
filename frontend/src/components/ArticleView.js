@@ -9,6 +9,10 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
   const [editingComment, setEditingComment] = useState(null);
   const [editAuthor, setEditAuthor] = useState('');
   const [editText, setEditText] = useState('');
+  const [versions, setVersions] = useState([]);
+  const [showVersions, setShowVersions] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState(article);
+  const [isViewingOldVersion, setIsViewingOldVersion] = useState(false);
 
   if (!article) return <div>Loading...</div>;
 
@@ -131,21 +135,92 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     }
   };
 
+  const loadVersions = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions`);
+      const data = await response.json();
+      setVersions(data);
+      setShowVersions(true);
+    } catch (err) {
+      alert('Failed to load versions');
+    }
+  };
+
+  const viewVersion = async (versionId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions/${versionId}`);
+      const data = await response.json();
+      setCurrentVersion(data);
+      setComments(data.comments || []);
+      setIsViewingOldVersion(!data.isLatest);
+      setShowVersions(false);
+    } catch (err) {
+      alert('Failed to load version');
+    }
+  };
+
+  const backToLatest = () => {
+    setCurrentVersion(article);
+    setComments(article.comments || []);
+    setIsViewingOldVersion(false);
+  };
+
   return (
     <div className="article-view">
       <button onClick={onBack} className="back-btn">← Back</button>
-      <div className="actions">
-        <button onClick={() => onEdit(article)} className="edit-btn">Edit</button>
-        <button onClick={handleDelete} className="delete-btn">Delete</button>
-      </div>
-      <h2>{article.title}</h2>
-      <p className="date">{new Date(article.createdAt).toLocaleDateString()}</p>
       
-      {article.attachments && article.attachments.length > 0 && (
+      {isViewingOldVersion && (
+        <div className="old-version-banner">
+          ⚠️ You are viewing version {currentVersion.version} (read-only). 
+          <button onClick={backToLatest} className="back-to-latest-btn">View Latest Version</button>
+        </div>
+      )}
+
+      <div className="actions">
+        {!isViewingOldVersion && (
+          <>
+            <button onClick={() => onEdit(currentVersion)} className="edit-btn">Edit</button>
+            <button onClick={handleDelete} className="delete-btn">Delete</button>
+          </>
+        )}
+        <button onClick={loadVersions} className="versions-btn">📋 View History</button>
+      </div>
+
+      {showVersions && (
+        <div className="versions-modal">
+          <div className="versions-content">
+            <h3>Version History</h3>
+            <button onClick={() => setShowVersions(false)} className="close-modal">×</button>
+            <div className="versions-list">
+              {versions.map(v => (
+                <div key={v.id} className={`version-item ${v.isLatest ? 'latest' : ''}`}>
+                  <div className="version-info">
+                    <strong>Version {v.version}</strong>
+                    {v.isLatest && <span className="latest-badge">Latest</span>}
+                    <span className="version-date">
+                      {new Date(v.updatedAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <button onClick={() => viewVersion(v.id)} className="view-version-btn">
+                    View
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h2>{currentVersion.title}</h2>
+      <p className="date">
+        Version {currentVersion.version} • {new Date(currentVersion.createdAt).toLocaleDateString()}
+      </p>
+      
+      {currentVersion.attachments && currentVersion.attachments.length > 0 && (
         <div className="attachments">
           <h3>Attachments</h3>
           <div className="attachments-list">
-            {article.attachments.map((file, index) => (
+            {currentVersion.attachments.map((file, index) => (
               <a 
                 key={index} 
                 href={`http://localhost:3001/uploads/${file.filename}`}
@@ -162,12 +237,13 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
         </div>
       )}
       
-      <div className="content" dangerouslySetInnerHTML={{ __html: article.content }} />
+      <div className="content" dangerouslySetInnerHTML={{ __html: currentVersion.content }} />
 
       <div className="comments-section">
         <h3>Comments ({comments.length})</h3>
         
-        <form onSubmit={handleCommentSubmit} className="comment-form">
+        {!isViewingOldVersion && (
+          <form onSubmit={handleCommentSubmit} className="comment-form">
           <input
             type="text"
             value={author}
@@ -183,6 +259,7 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
           {error && <div className="error">{error}</div>}
           <button type="submit">Add Comment</button>
         </form>
+        )}
 
         <div className="comments-list">
           {comments.length === 0 ? (
@@ -190,7 +267,7 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
           ) : (
             comments.map(comment => (
               <div key={comment.id} className="comment">
-                {editingComment === comment.id ? (
+                {editingComment === comment.id && !isViewingOldVersion ? (
                   <div className="comment-edit-form">
                     <input
                       type="text"
@@ -220,22 +297,24 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
                       <span className="comment-date">
                         {new Date(comment.createdAt).toLocaleDateString()}
                       </span>
-                      <div className="comment-actions">
-                        <button 
-                          onClick={() => handleEditComment(comment)}
-                          className="edit-comment-btn"
-                          title="Edit comment"
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="delete-comment-btn"
-                          title="Delete comment"
-                        >
-                          ×
-                        </button>
-                      </div>
+                      {!isViewingOldVersion && (
+                        <div className="comment-actions">
+                          <button 
+                            onClick={() => handleEditComment(comment)}
+                            className="edit-comment-btn"
+                            title="Edit comment"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="delete-comment-btn"
+                            title="Delete comment"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <p>{comment.text}</p>
                   </>

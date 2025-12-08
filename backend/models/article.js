@@ -24,6 +24,24 @@ module.exports = (sequelize, DataTypes) => {
         model: 'workspaces',
         key: 'id'
       }
+    },
+    version: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
+    },
+    originalArticleId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'articles',
+        key: 'id'
+      }
+    },
+    isLatest: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
     }
   }, {
     tableName: 'articles',
@@ -38,6 +56,14 @@ module.exports = (sequelize, DataTypes) => {
     Article.hasMany(models.Comment, {
       foreignKey: 'articleId',
       as: 'comments'
+    });
+    Article.belongsTo(models.Article, {
+      foreignKey: 'originalArticleId',
+      as: 'originalArticle'
+    });
+    Article.hasMany(models.Article, {
+      foreignKey: 'originalArticleId',
+      as: 'versions'
     });
   };
 

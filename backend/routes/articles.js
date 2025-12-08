@@ -10,6 +10,9 @@ router.post('/', upload.array('files', 5), articleController.createArticle);
 router.put('/:id', upload.array('files', 5), articleController.updateArticle);
 router.delete('/:id', articleController.deleteArticle);
 
+router.get('/:id/versions', articleController.getArticleVersions);
+router.get('/:id/versions/:versionId', articleController.getArticleVersion);
+
 router.get('/:id/comments', commentController.getCommentsByArticleId);
 router.post('/:id/comments', commentController.createComment);
 

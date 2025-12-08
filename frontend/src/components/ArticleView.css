@@ -228,3 +228,144 @@
   cursor: pointer;
 }
 
+.old-version-banner {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+  color: #856404;
+}
+
+.back-to-latest-btn {
+  padding: 8px 16px;
+  background: #ffc107;
+  color: #000;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 15px;
+}
+
+.back-to-latest-btn:hover {
+  background: #e0a800;
+}
+
+.versions-btn {
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.versions-btn:hover {
+  background: #5a6268;
+}
+
+.versions-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.versions-content {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 70vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.versions-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-modal:hover {
+  color: #000;
+}
+
+.versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #f8f9fa;
+}
+
+.version-item.latest {
+  border-color: #28a745;
+  background: #d4edda;
+}
+
+.version-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.latest-badge {
+  display: inline-block;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.version-date {
+  color: #666;
+  font-size: 14px;
+}
+
+.view-version-btn {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.view-version-btn:hover {
+  background: #0056b3;
+}
+

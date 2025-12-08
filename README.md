@@ -95,7 +95,7 @@ Database:
 - View list of articles
 - Read article content
 - Create new articles with WYSIWYG editor
-- Edit existing articles
+- Edit existing articles (creates new version)
 - Delete articles with confirmation
 - Upload attachments (images and PDFs)
 - Real-time notifications via WebSocket
@@ -105,11 +105,13 @@ Database:
 ## API Endpoints
 
 Articles:
-- GET /articles - get all articles (with optional ?workspaceId filter)
+- GET /articles - get all articles (latest versions only, with optional ?workspaceId filter)
 - GET /articles/:id - get single article with comments
 - POST /articles - create new article (with file upload and workspace)
-- PUT /articles/:id - update article (with file upload)
+- PUT /articles/:id - update article (creates new version with file upload)
 - DELETE /articles/:id - delete article
+- GET /articles/:id/versions - get version history for article
+- GET /articles/:id/versions/:versionId - get specific version of article
 
 Workspaces:
 - GET /workspaces - get all workspaces
@@ -129,3 +131,12 @@ WebSocket:
 - Max file size: 5MB
 - Multiple files per article
 - Files stored in `uploads/` folder
+
+## Article Versioning
+
+- Each article update creates a new version instead of overwriting
+- Version history accessible via "📋 View History" button
+- Old versions are read-only (cannot edit or add comments)
+- Yellow banner indicates when viewing an old version
+- Database tracks: version number, originalArticleId, isLatest flag
+- Comments are tied to the original article, visible in all versions

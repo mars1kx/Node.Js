@@ -6,11 +6,11 @@ const { UPLOAD_DIR } = require('../middleware/upload');
 const getAllArticles = async (req, res) => {
   try {
     const { workspaceId } = req.query;
-    const where = workspaceId ? { workspaceId } : {};
+    const where = workspaceId ? { workspaceId, isLatest: true } : { isLatest: true };
     
     const articles = await db.Article.findAll({
       where,
-      attributes: ['id', 'title', 'createdAt', 'workspaceId'],
+      attributes: ['id', 'title', 'createdAt', 'workspaceId', 'version'],
       order: [['createdAt', 'DESC']]
     });
     res.json(articles);
@@ -60,7 +60,10 @@ const createArticle = async (req, res) => {
       title: title.trim(),
       content: content,
       attachments: attachments,
-      workspaceId: workspaceId || null
+      workspaceId: workspaceId || null,
+      version: 1,
+      isLatest: true,
+      originalArticleId: null
     });
 
     if (req.app.locals.broadcast) {
@@ -88,13 +91,20 @@ const updateArticle = async (req, res) => {
   }
 
   try {
-    const article = await db.Article.findByPk(req.params.id);
-    if (!article) {
+    const currentArticle = await db.Article.findByPk(req.params.id);
+    if (!currentArticle) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    article.title = title.trim();
-    article.content = content;
+    if (!currentArticle.isLatest) {
+      return res.status(400).json({ error: 'Cannot edit old version. Please edit the latest version.' });
+    }
+
+    const originalId = currentArticle.originalArticleId || currentArticle.id;
+
+    await currentArticle.update({ isLatest: false });
+
+    let attachments = [...currentArticle.attachments];
 
     if (removedFiles) {
       const filesToRemove = JSON.parse(removedFiles);
@@ -106,7 +116,7 @@ const updateArticle = async (req, res) => {
           console.error(`Failed to delete file: ${filename}`);
         }
       }
-      article.attachments = article.attachments.filter(
+      attachments = attachments.filter(
         file => !filesToRemove.includes(file.filename)
       );
     }
@@ -118,20 +128,29 @@ const updateArticle = async (req, res) => {
         size: file.size,
         type: file.mimetype
       }));
-      article.attachments = [...article.attachments, ...newAttachments];
+      attachments = [...attachments, ...newAttachments];
     }
 
-    await article.save();
+    const newVersion = await db.Article.create({
+      title: title.trim(),
+      content: content,
+      attachments: attachments,
+      workspaceId: currentArticle.workspaceId,
+      version: currentArticle.version + 1,
+      originalArticleId: originalId,
+      isLatest: true
+    });
 
     if (req.app.locals.broadcast) {
       req.app.locals.broadcast({
         type: 'article_updated',
-        article: { id: article.id, title: article.title }
+        article: { id: newVersion.id, title: newVersion.title, version: newVersion.version }
       });
     }
 
-    res.json(article);
+    res.json(newVersion);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to update article' });
   }
 };
@@ -161,11 +180,73 @@ const deleteArticle = async (req, res) => {
   }
 };
 
+const getArticleVersions = async (req, res) => {
+  try {
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const originalId = article.originalArticleId || article.id;
+
+    const versions = await db.Article.findAll({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { id: originalId },
+          { originalArticleId: originalId }
+        ]
+      },
+      attributes: ['id', 'title', 'version', 'createdAt', 'updatedAt', 'isLatest'],
+      order: [['version', 'DESC']]
+    });
+
+    res.json(versions);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch article versions' });
+  }
+};
+
+const getArticleVersion = async (req, res) => {
+  try {
+    const { id, versionId } = req.params;
+    
+    const article = await db.Article.findByPk(id);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const versionArticle = await db.Article.findByPk(versionId, {
+      include: [{
+        model: db.Comment,
+        as: 'comments',
+        order: [['createdAt', 'ASC']]
+      }]
+    });
+
+    if (!versionArticle) {
+      return res.status(404).json({ error: 'Version not found' });
+    }
+
+    const originalId = article.originalArticleId || article.id;
+    const versionOriginalId = versionArticle.originalArticleId || versionArticle.id;
+
+    if (originalId !== versionOriginalId) {
+      return res.status(400).json({ error: 'Version does not belong to this article' });
+    }
+
+    res.json(versionArticle);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch article version' });
+  }
+};
+
 module.exports = {
   getAllArticles,
   getArticleById,
   createArticle,
   updateArticle,
-  deleteArticle
+  deleteArticle,
+  getArticleVersions,
+  getArticleVersion
 };
 
