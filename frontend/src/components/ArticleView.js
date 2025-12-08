@@ -6,6 +6,9 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState(article?.comments || []);
   const [error, setError] = useState('');
+  const [editingComment, setEditingComment] = useState(null);
+  const [editAuthor, setEditAuthor] = useState('');
+  const [editText, setEditText] = useState('');
 
   if (!article) return <div>Loading...</div>;
 
@@ -84,6 +87,50 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     }
   };
 
+  const handleEditComment = (comment) => {
+    setEditingComment(comment.id);
+    setEditAuthor(comment.author);
+    setEditText(comment.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingComment(null);
+    setEditAuthor('');
+    setEditText('');
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    if (!editAuthor.trim()) {
+      alert('Author name is required');
+      return;
+    }
+
+    if (!editText.trim()) {
+      alert('Comment text is required');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/comments/${commentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: editAuthor, text: editText })
+      });
+
+      if (response.ok) {
+        const updatedComment = await response.json();
+        setComments(comments.map(c => c.id === commentId ? updatedComment : c));
+        setEditingComment(null);
+        setEditAuthor('');
+        setEditText('');
+      } else {
+        alert('Failed to update comment');
+      }
+    } catch (err) {
+      alert('Error updating comment');
+    }
+  };
+
   return (
     <div className="article-view">
       <button onClick={onBack} className="back-btn">← Back</button>
@@ -143,19 +190,56 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
           ) : (
             comments.map(comment => (
               <div key={comment.id} className="comment">
-                <div className="comment-header">
-                  <strong>{comment.author}</strong>
-                  <span className="comment-date">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </span>
-                  <button 
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="delete-comment-btn"
-                  >
-                    ×
-                  </button>
-                </div>
-                <p>{comment.text}</p>
+                {editingComment === comment.id ? (
+                  <div className="comment-edit-form">
+                    <input
+                      type="text"
+                      value={editAuthor}
+                      onChange={(e) => setEditAuthor(e.target.value)}
+                      placeholder="Author name"
+                    />
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      placeholder="Comment text"
+                      rows="3"
+                    />
+                    <div className="comment-edit-buttons">
+                      <button onClick={() => handleUpdateComment(comment.id)} className="save-btn">
+                        Save
+                      </button>
+                      <button onClick={handleCancelEdit} className="cancel-btn">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="comment-header">
+                      <strong>{comment.author}</strong>
+                      <span className="comment-date">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </span>
+                      <div className="comment-actions">
+                        <button 
+                          onClick={() => handleEditComment(comment)}
+                          className="edit-comment-btn"
+                          title="Edit comment"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="delete-comment-btn"
+                          title="Delete comment"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                    <p>{comment.text}</p>
+                  </>
+                )}
               </div>
             ))
           )}

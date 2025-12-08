@@ -62,12 +62,22 @@ Open in browser http://localhost:3000
 
 ## Files
 
-Backend:
-- `backend/server.js` - Express API server with endpoints
+Backend (Modular Architecture):
+- `backend/server.js` - Main Express server (WebSocket, routes setup)
+- `backend/routes/` - API route definitions
+  - `articles.js` - Article and article comments routes
+  - `comments.js` - Comment CRUD routes
+  - `workspaces.js` - Workspace routes
+- `backend/controllers/` - Business logic controllers
+  - `articleController.js` - Article operations (CRUD)
+  - `commentController.js` - Comment operations (CRUD)
+  - `workspaceController.js` - Workspace operations
+- `backend/middleware/` - Custom middleware
+  - `upload.js` - Multer file upload configuration
 - `backend/models/` - Sequelize models (Article, Comment, Workspace)
-- `backend/migrations/` - database migrations
-- `backend/config/` - database configuration
-- `backend/package.json` - backend dependencies
+- `backend/migrations/` - Database migrations
+- `backend/config/` - Database configuration
+- `backend/package.json` - Backend dependencies
 
 Frontend:
 - `frontend/src/App.js` - main component with routing
@@ -90,7 +100,7 @@ Database:
 - Upload attachments (images and PDFs)
 - Real-time notifications via WebSocket
 - Workspaces - organize articles into workspaces
-- Comments - add and view comments on articles
+- Comments - full CRUD operations (Create, Read, Update, Delete)
 
 ## API Endpoints
 
@@ -107,6 +117,7 @@ Workspaces:
 Comments:
 - GET /articles/:id/comments - get comments for article
 - POST /articles/:id/comments - add comment to article
+- PUT /comments/:id - update comment (author and text)
 - DELETE /comments/:id - delete comment
 
 WebSocket:

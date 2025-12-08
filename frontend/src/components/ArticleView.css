@@ -157,6 +157,25 @@
   margin-right: 10px;
 }
 
+.comment-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.edit-comment-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 5px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.edit-comment-btn:hover {
+  opacity: 1;
+}
+
 .delete-comment-btn {
   background: none;
   border: none;
@@ -169,5 +188,43 @@
 .comment p {
   margin: 0;
   line-height: 1.5;
+}
+
+.comment-edit-form {
+  padding: 10px;
+}
+
+.comment-edit-form input,
+.comment-edit-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.comment-edit-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-edit-buttons .save-btn {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.comment-edit-buttons .cancel-btn {
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
