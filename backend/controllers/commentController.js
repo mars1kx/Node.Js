@@ -2,8 +2,15 @@ const db = require('../models');
 
 const getCommentsByArticleId = async (req, res) => {
   try {
+    const article = await db.Article.findByPk(req.params.id);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const originalId = article.originalArticleId || article.id;
+
     const comments = await db.Comment.findAll({
-      where: { articleId: req.params.id },
+      where: { originalArticleId: originalId },
       order: [['createdAt', 'ASC']]
     });
     res.json(comments);
@@ -29,8 +36,11 @@ const createComment = async (req, res) => {
       return res.status(404).json({ error: 'Article not found' });
     }
 
+    const originalId = article.originalArticleId || article.id;
+
     const comment = await db.Comment.create({
       articleId: req.params.id,
+      originalArticleId: originalId,
       author: author.trim(),
       text: text.trim()
     });
@@ -39,6 +49,7 @@ const createComment = async (req, res) => {
       req.app.locals.broadcast({
         type: 'comment_added',
         articleId: req.params.id,
+        originalArticleId: originalId,
         comment: comment
       });
     }

@@ -21,17 +21,22 @@ const getAllArticles = async (req, res) => {
 
 const getArticleById = async (req, res) => {
   try {
-    const article = await db.Article.findByPk(req.params.id, {
-      include: [{
-        model: db.Comment,
-        as: 'comments',
-        order: [['createdAt', 'ASC']]
-      }]
-    });
+    const article = await db.Article.findByPk(req.params.id);
     if (!article) {
       return res.status(404).json({ error: 'Article not found' });
     }
-    res.json(article);
+
+    const originalId = article.originalArticleId || article.id;
+
+    const comments = await db.Comment.findAll({
+      where: { originalArticleId: originalId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    const articleWithComments = article.toJSON();
+    articleWithComments.comments = comments;
+
+    res.json(articleWithComments);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch article' });
   }
@@ -215,13 +220,7 @@ const getArticleVersion = async (req, res) => {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    const versionArticle = await db.Article.findByPk(versionId, {
-      include: [{
-        model: db.Comment,
-        as: 'comments',
-        order: [['createdAt', 'ASC']]
-      }]
-    });
+    const versionArticle = await db.Article.findByPk(versionId);
 
     if (!versionArticle) {
       return res.status(404).json({ error: 'Version not found' });
@@ -234,7 +233,15 @@ const getArticleVersion = async (req, res) => {
       return res.status(400).json({ error: 'Version does not belong to this article' });
     }
 
-    res.json(versionArticle);
+    const comments = await db.Comment.findAll({
+      where: { originalArticleId: originalId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    const versionWithComments = versionArticle.toJSON();
+    versionWithComments.comments = comments;
+
+    res.json(versionWithComments);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch article version' });
   }
