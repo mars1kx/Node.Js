@@ -180,7 +180,7 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
         {!isViewingOldVersion && (
           <>
             <button onClick={() => onEdit(currentVersion)} className="edit-btn">Edit</button>
-            <button onClick={handleDelete} className="delete-btn">Delete</button>
+        <button onClick={handleDelete} className="delete-btn">Delete</button>
           </>
         )}
         <button onClick={loadVersions} className="versions-btn">📋 View History</button>
@@ -243,7 +243,7 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
         <h3>Comments ({comments.length})</h3>
         
         {!isViewingOldVersion && (
-          <form onSubmit={handleCommentSubmit} className="comment-form">
+        <form onSubmit={handleCommentSubmit} className="comment-form">
           <input
             type="text"
             value={author}
@@ -292,11 +292,11 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
                   </div>
                 ) : (
                   <>
-                    <div className="comment-header">
-                      <strong>{comment.author}</strong>
-                      <span className="comment-date">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </span>
+                <div className="comment-header">
+                  <strong>{comment.author}</strong>
+                  <span className="comment-date">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </span>
                       {!isViewingOldVersion && (
                         <div className="comment-actions">
                           <button 
@@ -306,17 +306,17 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
                           >
                             ✏️
                           </button>
-                          <button 
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="delete-comment-btn"
+                  <button 
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="delete-comment-btn"
                             title="Delete comment"
-                          >
-                            ×
-                          </button>
+                  >
+                    ×
+                  </button>
                         </div>
                       )}
-                    </div>
-                    <p>{comment.text}</p>
+                </div>
+                <p>{comment.text}</p>
                   </>
                 )}
               </div>

@@ -23,6 +23,8 @@ db.sequelize = sequelize;
 db.Article = require('./article')(sequelize, Sequelize);
 db.Workspace = require('./workspace')(sequelize, Sequelize);
 db.Comment = require('./comment')(sequelize, Sequelize);
+db.User = require('./user')(sequelize, Sequelize);
+db.User = require('./user')(sequelize, Sequelize);
 
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {

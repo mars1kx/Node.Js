@@ -9,6 +9,7 @@ const { UPLOAD_DIR } = require('./middleware/upload');
 const articlesRouter = require('./routes/articles');
 const commentsRouter = require('./routes/comments');
 const workspacesRouter = require('./routes/workspaces');
+const authRouter = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +43,7 @@ function broadcast(message) {
 
 app.locals.broadcast = broadcast;
 
+app.use('/auth', authRouter);
 app.use('/articles', articlesRouter);
 app.use('/comments', commentsRouter);
 app.use('/workspaces', workspacesRouter);

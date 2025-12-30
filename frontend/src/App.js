@@ -1,29 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Login from './components/Login';
+import Register from './components/Register';
 import ArticleList from './components/ArticleList';
 import ArticleView from './components/ArticleView';
 import ArticleCreate from './components/ArticleCreate';
 import ArticleEdit from './components/ArticleEdit';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authView, setAuthView] = useState('login');
   const [view, setView] = useState('list');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [articles, setArticles] = useState([]);
   const [notification, setNotification] = useState(null);
   const [workspaces, setWorkspaces] = useState([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    loadWorkspaces();
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
   }, []);
 
   useEffect(() => {
-    if (view === 'list') {
-      loadArticles();
+    if (isAuthenticated) {
+      loadWorkspaces();
     }
-  }, [view, selectedWorkspace]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (isAuthenticated && view === 'list') {
+      loadArticles();
+    }
+  }, [isAuthenticated, view, selectedWorkspace]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     const ws = new WebSocket('ws://localhost:3001');
     
     ws.onopen = () => {
@@ -53,28 +71,68 @@ function App() {
     return () => {
       ws.close();
     };
-  }, [view]);
+  }, [isAuthenticated, view]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  };
+
+  const handleAuthError = (response) => {
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      setUser(null);
+      return true;
+    }
+    return false;
+  };
 
   const loadWorkspaces = async () => {
-    const response = await fetch('http://localhost:3001/workspaces');
-    const data = await response.json();
-    setWorkspaces(data);
+    try {
+      const response = await fetch('http://localhost:3001/workspaces', {
+        headers: getAuthHeaders()
+      });
+      if (handleAuthError(response)) return;
+      const data = await response.json();
+      setWorkspaces(data);
+    } catch (err) {
+      console.error('Failed to load workspaces');
+    }
   };
 
   const loadArticles = async () => {
-    const url = selectedWorkspace 
-      ? `http://localhost:3001/articles?workspaceId=${selectedWorkspace}` 
-      : 'http://localhost:3001/articles';
-    const response = await fetch(url);
-    const data = await response.json();
-    setArticles(data);
+    try {
+      const url = selectedWorkspace 
+        ? `http://localhost:3001/articles?workspaceId=${selectedWorkspace}` 
+        : 'http://localhost:3001/articles';
+      const response = await fetch(url, {
+        headers: getAuthHeaders()
+      });
+      if (handleAuthError(response)) return;
+      const data = await response.json();
+      setArticles(data);
+    } catch (err) {
+      console.error('Failed to load articles');
+    }
   };
 
   const handleViewArticle = async (id) => {
-    const response = await fetch(`http://localhost:3001/articles/${id}`);
-    const data = await response.json();
-    setSelectedArticle(data);
-    setView('view');
+    try {
+      const response = await fetch(`http://localhost:3001/articles/${id}`, {
+        headers: getAuthHeaders()
+      });
+      if (handleAuthError(response)) return;
+      const data = await response.json();
+      setSelectedArticle(data);
+      setView('view');
+    } catch (err) {
+      console.error('Failed to load article');
+    }
   };
 
   const handleCreateSuccess = () => {
@@ -89,6 +147,44 @@ function App() {
   const handleEditSuccess = () => {
     setView('list');
   };
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  };
+
+  const handleRegister = () => {
+    setIsAuthenticated(true);
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUser(null);
+    setView('list');
+  };
+
+  if (!isAuthenticated) {
+    return authView === 'login' ? (
+      <Login 
+        onLogin={handleLogin}
+        onSwitchToRegister={() => setAuthView('register')}
+      />
+    ) : (
+      <Register 
+        onRegister={handleRegister}
+        onSwitchToLogin={() => setAuthView('login')}
+      />
+    );
+  }
 
   return (
     <div className="App">
@@ -105,6 +201,10 @@ function App() {
             <button onClick={() => setView('create')}>Create New</button>
           </nav>
         )}
+        <div className="user-info">
+          <span>{user?.email}</span>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
+        </div>
       </header>
 
       {view === 'list' && (

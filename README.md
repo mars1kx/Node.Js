@@ -92,6 +92,7 @@ Database:
 
 ## Features
 
+- **JWT Authentication** - secure login and registration
 - View list of articles
 - Read article content
 - Create new articles with WYSIWYG editor
@@ -101,8 +102,16 @@ Database:
 - Real-time notifications via WebSocket
 - Workspaces - organize articles into workspaces
 - Comments - full CRUD operations (Create, Read, Update, Delete)
+- Article Versioning - track changes, view history
 
 ## API Endpoints
+
+Authentication:
+- POST /auth/register - register new user (email + password)
+- POST /auth/login - login and receive JWT token
+
+All endpoints below require valid JWT token in Authorization header:
+`Authorization: Bearer <token>`
 
 Articles:
 - GET /articles - get all articles (latest versions only, with optional ?workspaceId filter)

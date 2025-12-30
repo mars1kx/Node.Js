@@ -41,15 +41,45 @@ header {
   padding: 20px;
   margin-bottom: 20px;
   border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 header h1 {
-  margin-bottom: 15px;
+  margin: 0 0 15px 0;
   cursor: pointer;
+  flex: 1 1 100%;
 }
 
 header h1:hover {
   color: #007bff;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info span {
+  color: #666;
+  font-size: 14px;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: #c82333;
 }
 
 .workspace-filter {
