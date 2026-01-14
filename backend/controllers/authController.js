@@ -4,6 +4,7 @@ const db = require('../models');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '24h';
+const MIN_PASSWORD_LENGTH = 6;
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -12,8 +13,8 @@ const register = async (req, res) => {
     return res.status(400).json({ error: 'Email is required' });
   }
 
-  if (!password || password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (!password || password.length < MIN_PASSWORD_LENGTH) {
+    return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

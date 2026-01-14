@@ -76,8 +76,12 @@ function ArticleEdit({ article, onSuccess, onCancel }) {
         formData.append('files', file);
       });
 
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/articles/${article.id}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData
       });
 

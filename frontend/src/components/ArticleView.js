@@ -20,8 +20,12 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     if (!window.confirm('Delete this article?')) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/articles/${article.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -55,9 +59,13 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/articles/${article.id}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ author, text: commentText })
       });
 
@@ -77,8 +85,12 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
 
   const handleDeleteComment = async (commentId) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/comments/${commentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -115,9 +127,13 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/comments/${commentId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ author: editAuthor, text: editText })
       });
 
@@ -137,7 +153,12 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
 
   const loadVersions = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setVersions(data);
       setShowVersions(true);
@@ -148,7 +169,12 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
 
   const viewVersion = async (versionId) => {
     try {
-      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions/${versionId}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/articles/${article.id}/versions/${versionId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setCurrentVersion(data);
       setComments(data.comments || []);

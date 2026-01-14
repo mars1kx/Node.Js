@@ -69,8 +69,12 @@ function ArticleCreate({ onSuccess, onCancel, workspaces }) {
         formData.append('files', file);
       });
 
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/articles', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData
       });
 
