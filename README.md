@@ -60,6 +60,10 @@ npm start
 
 Open in browser http://localhost:3000
 
+## Roles
+
+The first registered user automatically becomes an admin. Subsequent users are assigned the regular user role by default. Admins have additional privileges including user management capabilities.
+
 ## Files
 
 Backend (Modular Architecture):

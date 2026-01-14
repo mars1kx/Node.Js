@@ -42,6 +42,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    authorId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     }
   }, {
     tableName: 'articles',
@@ -64,6 +72,10 @@ module.exports = (sequelize, DataTypes) => {
     Article.hasMany(models.Article, {
       foreignKey: 'originalArticleId',
       as: 'versions'
+    });
+    Article.belongsTo(models.User, {
+      foreignKey: 'authorId',
+      as: 'author'
     });
   };
 

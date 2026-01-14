@@ -68,7 +68,8 @@ const createArticle = async (req, res) => {
       workspaceId: workspaceId || null,
       version: 1,
       isLatest: true,
-      originalArticleId: null
+      originalArticleId: null,
+      authorId: req.user.id
     });
 
     if (req.app.locals.broadcast) {
@@ -103,6 +104,10 @@ const updateArticle = async (req, res) => {
 
     if (!currentArticle.isLatest) {
       return res.status(400).json({ error: 'Cannot edit old version. Please edit the latest version.' });
+    }
+
+    if (currentArticle.authorId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You do not have permission to edit this article' });
     }
 
     const originalId = currentArticle.originalArticleId || currentArticle.id;
@@ -143,7 +148,8 @@ const updateArticle = async (req, res) => {
       workspaceId: currentArticle.workspaceId,
       version: currentArticle.version + 1,
       originalArticleId: originalId,
-      isLatest: true
+      isLatest: true,
+      authorId: currentArticle.authorId
     });
 
     if (req.app.locals.broadcast) {

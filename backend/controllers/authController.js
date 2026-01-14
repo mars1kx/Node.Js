@@ -7,7 +7,7 @@ const JWT_EXPIRES_IN = '24h';
 const MIN_PASSWORD_LENGTH = 6;
 
 const register = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   if (!email || !email.trim()) {
     return res.status(400).json({ error: 'Email is required' });
@@ -30,13 +30,18 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+
+    const userCount = await db.User.count();
+    const userRole = userCount === 0 ? 'admin' : (role || 'user');
+
     const user = await db.User.create({
       email: email.toLowerCase(),
-      password: hashedPassword
+      password: hashedPassword,
+      role: userRole
     });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -46,7 +51,8 @@ const register = async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
@@ -73,7 +79,7 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -83,7 +89,8 @@ const login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {

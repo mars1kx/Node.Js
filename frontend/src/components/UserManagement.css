@@ -1,0 +1,155 @@
+.user-management {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.user-management h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.user-count {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.user-management.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #666;
+}
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #fcc;
+}
+
+.retry-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retry-btn:hover {
+  background-color: #0056b3;
+}
+
+.users-table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background-color: #f8f9fa;
+}
+
+.users-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.users-table td {
+  padding: 15px;
+  border-bottom: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.role-badge.role-admin {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.role-badge.role-user {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.role-select {
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: white;
+  min-width: 150px;
+}
+
+.role-select:hover:not(:disabled) {
+  border-color: #80bdff;
+}
+
+.role-select:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.updating-indicator {
+  display: inline-block;
+  margin-left: 10px;
+  color: #007bff;
+  font-size: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .users-table-container {
+    overflow-x: scroll;
+  }
+  
+  .users-table {
+    min-width: 600px;
+  }
+  
+  .users-table th,
+  .users-table td {
+    padding: 10px;
+    font-size: 14px;
+  }
+}

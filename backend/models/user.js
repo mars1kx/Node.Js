@@ -13,11 +13,23 @@ module.exports = (sequelize, DataTypes) => {
     password: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    role: {
+      type: DataTypes.ENUM('user', 'admin'),
+      allowNull: false,
+      defaultValue: 'user'
     }
   }, {
     tableName: 'users',
     timestamps: true
   });
+
+  User.associate = (models) => {
+    User.hasMany(models.Article, {
+      foreignKey: 'authorId',
+      as: 'articles'
+    });
+  };
 
   return User;
 };

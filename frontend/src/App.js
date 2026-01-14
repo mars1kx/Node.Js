@@ -6,6 +6,7 @@ import ArticleList from './components/ArticleList';
 import ArticleView from './components/ArticleView';
 import ArticleCreate from './components/ArticleCreate';
 import ArticleEdit from './components/ArticleEdit';
+import UserManagement from './components/UserManagement';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -196,13 +197,19 @@ function App() {
       
       <header>
         <h1 onClick={() => setView('list')}>Articles</h1>
-        {(view === 'list' || view === 'view') && (
-          <nav>
+        <nav>
+          {(view === 'list' || view === 'view') && (
             <button onClick={() => setView('create')}>Create New</button>
-          </nav>
-        )}
+          )}
+          {user?.role === 'admin' && (
+            <button onClick={() => setView('users')} className="admin-btn">
+              User Management
+            </button>
+          )}
+        </nav>
         <div className="user-info">
           <span>{user?.email}</span>
+          {user?.role === 'admin' && <span className="admin-badge">Admin</span>}
           <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </header>
@@ -231,6 +238,7 @@ function App() {
             article={selectedArticle} 
             onBack={() => setView('list')}
             onEdit={handleEdit}
+            currentUser={user}
           />
         )}
         {view === 'create' && (
@@ -246,6 +254,9 @@ function App() {
             onSuccess={handleEditSuccess}
             onCancel={() => setView('view')}
           />
+        )}
+        {view === 'users' && user?.role === 'admin' && (
+          <UserManagement />
         )}
       </main>
     </div>

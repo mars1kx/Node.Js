@@ -68,6 +68,16 @@ header h1:hover {
   font-size: 14px;
 }
 
+.admin-badge {
+  background: #28a745;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
 .logout-btn {
   padding: 8px 16px;
   background: #dc3545;
@@ -101,14 +111,31 @@ header h1:hover {
   font-size: 14px;
 }
 
+nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 nav button {
   padding: 10px 20px;
-  margin-right: 10px;
   background: #007bff;
   color: white;
   border: none;
   border-radius: 3px;
   cursor: pointer;
+}
+
+nav button:hover {
+  background: #0056b3;
+}
+
+nav .admin-btn {
+  background: #28a745;
+}
+
+nav .admin-btn:hover {
+  background: #218838;
 }
 
 main {

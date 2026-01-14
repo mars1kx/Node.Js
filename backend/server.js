@@ -10,6 +10,7 @@ const articlesRouter = require('./routes/articles');
 const commentsRouter = require('./routes/comments');
 const workspacesRouter = require('./routes/workspaces');
 const authRouter = require('./routes/auth');
+const usersRouter = require('./routes/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +48,7 @@ app.use('/auth', authRouter);
 app.use('/articles', articlesRouter);
 app.use('/comments', commentsRouter);
 app.use('/workspaces', workspacesRouter);
+app.use('/users', usersRouter);
 
 fs.mkdir(UPLOAD_DIR, { recursive: true }).then(async () => {
   try {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ArticleView.css';
 
-function ArticleView({ article, onBack, onEdit, onDelete }) {
+function ArticleView({ article, onBack, onEdit, onDelete, currentUser }) {
   const [author, setAuthor] = useState('');
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState(article?.comments || []);
@@ -15,6 +15,11 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
   const [isViewingOldVersion, setIsViewingOldVersion] = useState(false);
 
   if (!article) return <div>Loading...</div>;
+
+  const canEdit = currentUser && (
+    currentUser.id === article.authorId || 
+    currentUser.role === 'admin'
+  );
 
   const handleDelete = async () => {
     if (!window.confirm('Delete this article?')) return;
@@ -203,10 +208,10 @@ function ArticleView({ article, onBack, onEdit, onDelete }) {
       )}
 
       <div className="actions">
-        {!isViewingOldVersion && (
+        {!isViewingOldVersion && canEdit && (
           <>
             <button onClick={() => onEdit(currentVersion)} className="edit-btn">Edit</button>
-        <button onClick={handleDelete} className="delete-btn">Delete</button>
+            <button onClick={handleDelete} className="delete-btn">Delete</button>
           </>
         )}
         <button onClick={loadVersions} className="versions-btn">📋 View History</button>
