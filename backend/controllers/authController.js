@@ -2,12 +2,16 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 const JWT_EXPIRES_IN = '24h';
 const MIN_PASSWORD_LENGTH = 6;
 
 const register = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password } = req.body;
 
   if (!email || !email.trim()) {
     return res.status(400).json({ error: 'Email is required' });
@@ -30,14 +34,10 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-
-    const userCount = await db.User.count();
-    const userRole = userCount === 0 ? 'admin' : (role || 'user');
-
     const user = await db.User.create({
       email: email.toLowerCase(),
       password: hashedPassword,
-      role: userRole
+      role: 'user'
     });
 
     const token = jwt.sign(
@@ -98,7 +98,28 @@ const login = async (req, res) => {
   }
 };
 
+const me = async (req, res) => {
+  try {
+    const user = await db.User.findByPk(req.user.id, {
+      attributes: ['id', 'email', 'role']
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      role: user.role
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user info' });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  me
 };

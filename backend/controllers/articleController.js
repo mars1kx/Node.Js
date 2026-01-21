@@ -1,12 +1,26 @@
 const db = require('../models');
 const fs = require('fs').promises;
 const path = require('path');
+const { Op } = require('sequelize');
 const { UPLOAD_DIR } = require('../middleware/upload');
 
 const getAllArticles = async (req, res) => {
   try {
-    const { workspaceId } = req.query;
-    const where = workspaceId ? { workspaceId, isLatest: true } : { isLatest: true };
+    const { workspaceId, search } = req.query;
+    
+    const where = { isLatest: true };
+    
+    if (workspaceId) {
+      where.workspaceId = workspaceId;
+    }
+    
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      where[Op.or] = [
+        { title: { [Op.like]: searchTerm } },
+        { content: { [Op.like]: searchTerm } }
+      ];
+    }
     
     const articles = await db.Article.findAll({
       where,
@@ -15,6 +29,7 @@ const getAllArticles = async (req, res) => {
     });
     res.json(articles);
   } catch (err) {
+    console.error('Search error:', err);
     res.status(500).json({ error: 'Failed to fetch articles' });
   }
 };

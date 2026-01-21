@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './UserManagement.css';
 
-function UserManagement() {
+function UserManagement({ currentUser }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingUserId, setUpdatingUserId] = useState(null);
+
+  const isCurrentUser = (userId) => currentUser && currentUser.id === userId;
 
   useEffect(() => {
     loadUsers();
@@ -110,9 +112,12 @@ function UserManagement() {
           </thead>
           <tbody>
             {users.map(user => (
-              <tr key={user.id}>
+              <tr key={user.id} className={isCurrentUser(user.id) ? 'current-user-row' : ''}>
                 <td>{user.id}</td>
-                <td>{user.email}</td>
+                <td>
+                  {user.email}
+                  {isCurrentUser(user.id) && <span className="current-user-badge">(You)</span>}
+                </td>
                 <td>
                   <span className={`role-badge role-${user.role}`}>
                     {user.role === 'admin' ? 'Admin' : 'User'}
@@ -120,17 +125,23 @@ function UserManagement() {
                 </td>
                 <td>{formatDate(user.createdAt)}</td>
                 <td>
-                  <select
-                    value={user.role}
-                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                    disabled={updatingUserId === user.id}
-                    className="role-select"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  {updatingUserId === user.id && (
-                    <span className="updating-indicator">Updating...</span>
+                  {isCurrentUser(user.id) ? (
+                    <span className="no-action">-</span>
+                  ) : (
+                    <>
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className="role-select"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      {updatingUserId === user.id && (
+                        <span className="updating-indicator">Updating...</span>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>

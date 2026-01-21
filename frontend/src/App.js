@@ -18,15 +18,43 @@ function App() {
   const [workspaces, setWorkspaces] = useState([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
   const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
+    if (token) {
+      verifyUser(token);
     }
   }, []);
+
+  const verifyUser = async (token) => {
+    try {
+      const response = await fetch('http://localhost:3001/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Failed to verify user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -38,7 +66,7 @@ function App() {
     if (isAuthenticated && view === 'list') {
       loadArticles();
     }
-  }, [isAuthenticated, view, selectedWorkspace]);
+  }, [isAuthenticated, view, selectedWorkspace, searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -108,9 +136,19 @@ function App() {
 
   const loadArticles = async () => {
     try {
-      const url = selectedWorkspace 
-        ? `http://localhost:3001/articles?workspaceId=${selectedWorkspace}` 
+      const params = new URLSearchParams();
+      if (selectedWorkspace) {
+        params.append('workspaceId', selectedWorkspace);
+      }
+      if (searchQuery && searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+      }
+      
+      const queryString = params.toString();
+      const url = queryString 
+        ? `http://localhost:3001/articles?${queryString}` 
         : 'http://localhost:3001/articles';
+      
       const response = await fetch(url, {
         headers: getAuthHeaders()
       });
@@ -120,6 +158,10 @@ function App() {
     } catch (err) {
       console.error('Failed to load articles');
     }
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
   };
 
   const handleViewArticle = async (id) => {
@@ -149,19 +191,17 @@ function App() {
     setView('list');
   };
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+  const handleLogin = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      await verifyUser(token);
     }
   };
 
-  const handleRegister = () => {
-    setIsAuthenticated(true);
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+  const handleRegister = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      await verifyUser(token);
     }
   };
 
@@ -231,7 +271,12 @@ function App() {
 
       <main>
         {view === 'list' && (
-          <ArticleList articles={articles} onView={handleViewArticle} />
+          <ArticleList 
+            articles={articles} 
+            onView={handleViewArticle}
+            onSearch={handleSearch}
+            searchQuery={searchQuery}
+          />
         )}
         {view === 'view' && (
           <ArticleView 
@@ -256,7 +301,7 @@ function App() {
           />
         )}
         {view === 'users' && user?.role === 'admin' && (
-          <UserManagement />
+          <UserManagement currentUser={user} />
         )}
       </main>
     </div>

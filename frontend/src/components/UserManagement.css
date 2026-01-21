@@ -79,8 +79,28 @@
   background-color: #f8f9fa;
 }
 
+.users-table tbody tr.current-user-row {
+  background-color: #fff8e6;
+}
+
+.users-table tbody tr.current-user-row:hover {
+  background-color: #fff3cd;
+}
+
 .users-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.current-user-badge {
+  margin-left: 8px;
+  color: #856404;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.no-action {
+  color: #999;
+  font-style: italic;
 }
 
 .role-badge {

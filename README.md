@@ -62,7 +62,16 @@ Open in browser http://localhost:3000
 
 ## Roles
 
-The first registered user automatically becomes an admin. Subsequent users are assigned the regular user role by default. Admins have additional privileges including user management capabilities.
+All registered users are assigned the regular `user` role by default. To create an admin user, you can either:
+
+1. **Update role directly in the database:**
+   ```sql
+   UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
+   ```
+
+2. **Create a seed file** in `backend/seeders/` to initialize admin users.
+
+Admins have additional privileges including user management capabilities and the ability to edit any article.
 
 ## Files
 
