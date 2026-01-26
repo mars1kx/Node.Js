@@ -14,6 +14,8 @@ router.delete('/:id', authenticateToken, articleController.deleteArticle);
 router.get('/:id/versions', authenticateToken, articleController.getArticleVersions);
 router.get('/:id/versions/:versionId', authenticateToken, articleController.getArticleVersion);
 
+router.get('/:id/export/pdf', authenticateToken, articleController.exportToPdf);
+
 router.get('/:id/comments', authenticateToken, commentController.getCommentsByArticleId);
 router.post('/:id/comments', authenticateToken, commentController.createComment);
 

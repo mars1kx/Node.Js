@@ -13,6 +13,7 @@ function ArticleView({ article, onBack, onEdit, onDelete, currentUser }) {
   const [showVersions, setShowVersions] = useState(false);
   const [currentVersion, setCurrentVersion] = useState(article);
   const [isViewingOldVersion, setIsViewingOldVersion] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!article) return <div>Loading...</div>;
 
@@ -196,6 +197,38 @@ function ArticleView({ article, onBack, onEdit, onDelete, currentUser }) {
     setIsViewingOldVersion(false);
   };
 
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/articles/${currentVersion.id}/export/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${currentVersion.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Error exporting PDF');
+      console.error(err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="article-view">
       <button onClick={onBack} className="back-btn">← Back</button>
@@ -215,6 +248,13 @@ function ArticleView({ article, onBack, onEdit, onDelete, currentUser }) {
           </>
         )}
         <button onClick={loadVersions} className="versions-btn">📋 View History</button>
+        <button 
+          onClick={handleExportPdf} 
+          className="export-pdf-btn"
+          disabled={isExporting}
+        >
+          {isExporting ? 'Exporting...' : 'Export as PDF'}
+        </button>
       </div>
 
       {showVersions && (

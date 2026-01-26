@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { Op } = require('sequelize');
 const { UPLOAD_DIR } = require('../middleware/upload');
+const PDFDocument = require('pdfkit');
 
 const getAllArticles = async (req, res) => {
   try {
@@ -268,6 +269,207 @@ const getArticleVersion = async (req, res) => {
   }
 };
 
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<li>/gi, '• ')
+    .replace(/<\/h[1-6]>/gi, '\n\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
+const exportToPdf = async (req, res) => {
+  try {
+    const article = await db.Article.findByPk(req.params.id, {
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['email']
+        }
+      ]
+    });
+
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: {
+        top: 72,
+        bottom: 72,
+        left: 72,
+        right: 72
+      },
+      bufferPages: true
+    });
+
+    const filename = `article-${article.id}-${Date.now()}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    doc.pipe(res);
+
+    doc
+      .strokeColor('#007bff')
+      .lineWidth(3)
+      .moveTo(72, 50)
+      .lineTo(523, 50)
+      .stroke();
+
+    doc
+      .fillColor('#333333')
+      .font('Helvetica-Bold')
+      .fontSize(24)
+      .text(article.title, 72, 80, {
+        width: 451,
+        align: 'left'
+      });
+
+    let currentY = doc.y + 20;
+
+    doc
+      .fillColor('#666666')
+      .font('Helvetica')
+      .fontSize(10);
+
+    const metadataItems = [];
+
+    if (article.author && article.author.email) {
+      metadataItems.push(`Author: ${article.author.email}`);
+    }
+
+    metadataItems.push(`Created: ${new Date(article.createdAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}`);
+
+    if (article.updatedAt && article.updatedAt !== article.createdAt) {
+      metadataItems.push(`Updated: ${new Date(article.updatedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`);
+    }
+
+    metadataItems.push(`Version: ${article.version}`);
+
+    doc.text(metadataItems.join('  |  '), 72, currentY, {
+      width: 451
+    });
+
+    currentY = doc.y + 15;
+
+    doc
+      .strokeColor('#dddddd')
+      .lineWidth(1)
+      .moveTo(72, currentY)
+      .lineTo(523, currentY)
+      .stroke();
+
+    currentY += 20;
+
+    const plainContent = stripHtmlTags(article.content);
+
+    doc
+      .fillColor('#333333')
+      .font('Helvetica')
+      .fontSize(12)
+      .text(plainContent, 72, currentY, {
+        width: 451,
+        align: 'justify',
+        lineGap: 4
+      });
+
+    currentY = doc.y + 30;
+
+    if (article.attachments && article.attachments.length > 0) {
+      if (currentY > 700) {
+        doc.addPage();
+        currentY = 72;
+      }
+
+      doc
+        .fillColor('#333333')
+        .font('Helvetica-Bold')
+        .fontSize(14)
+        .text('Attachments', 72, currentY);
+
+      currentY = doc.y + 10;
+
+      doc
+        .font('Helvetica')
+        .fontSize(10)
+        .fillColor('#666666');
+
+      article.attachments.forEach((file, index) => {
+        const fileSize = Math.round(file.size / 1024);
+        doc.text(`${index + 1}. ${file.originalName} (${fileSize} KB)`, 72, currentY);
+        currentY = doc.y + 5;
+      });
+    }
+
+    const range = doc.bufferedPageRange();
+    const exportDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    for (let i = 0; i < range.count; i++) {
+      doc.switchToPage(i);
+
+      const savedY = doc.y;
+
+      doc
+        .strokeColor('#dddddd')
+        .lineWidth(1)
+        .moveTo(72, 770)
+        .lineTo(523, 770)
+        .stroke();
+
+      const pageText = `Page ${i + 1} of ${range.count}`;
+      const pageTextWidth = doc.widthOfString(pageText, { font: 'Helvetica', size: 9 });
+      const centerX = 72 + (451 - pageTextWidth) / 2;
+
+      doc
+        .fillColor('#999999')
+        .font('Helvetica')
+        .fontSize(9);
+
+      doc.y = 780;
+      doc.x = centerX;
+      doc._fragment(pageText, centerX, 780, {});
+
+      const dateTextWidth = doc.widthOfString(`Exported on ${exportDate}`, { font: 'Helvetica', size: 9 });
+      const rightX = 523 - dateTextWidth;
+      doc._fragment(`Exported on ${exportDate}`, rightX, 780, {});
+
+
+      doc.y = savedY;
+    }
+
+    doc.end();
+  } catch (err) {
+    console.error('PDF export error:', err);
+    res.status(500).json({ error: 'Failed to export article as PDF' });
+  }
+};
+
 module.exports = {
   getAllArticles,
   getArticleById,
@@ -275,6 +477,7 @@ module.exports = {
   updateArticle,
   deleteArticle,
   getArticleVersions,
-  getArticleVersion
+  getArticleVersion,
+  exportToPdf
 };
 
